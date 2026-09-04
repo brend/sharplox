@@ -50,17 +50,31 @@ static class Lox
 	{
 		var scanner = new Scanner(source);
 		var tokens = scanner.ScanTokens();
+		var parser = new Parser(tokens);
+		var expression = parser.Parse();
 
-		foreach (var token in tokens)
-		{
-			Console.WriteLine(token);
-		}
+		// Stop if there was a syntax error
+		if (hadError) return;
+
+		Console.WriteLine(new AstPrinter().Print(expression!));
 	}
 
 	public static void Error(int line, string message)
 	{
 		Report(line, "", message);
+	}
+
+	public static void Error(Token token, string message)
+	{
+		if (token.type == TokenType.EOF)
+		{
+			Report(token.line, " at end", message);
 		}
+		else
+		{
+			Report(token.line, $"at '{token.lexeme}'", message);
+		}
+	}
 
 	private static void Report(int line, string where, string message)
 	{
