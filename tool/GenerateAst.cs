@@ -7,7 +7,7 @@ static class GenerateAst
 		if (args.Length != 1)
 		{
 			Console.Error.WriteLine("Usage: generate_ast <output directory>");
-			Environment.Exit(64);
+			System.Environment.Exit(64);
 			return;
 		}
 
@@ -15,11 +15,21 @@ static class GenerateAst
 
 		DefineAst(outputDir, "Expr", 
 			[
+				"Assign		: Token name, Expr value",
 				"Binary		: Expr left, Token oper, Expr right",
 				"Grouping	: Expr expression",
 				"Literal	: object? value",
-				"Unary		: Token oper, Expr right"
+				"Unary		: Token oper, Expr right",
+				"Variable	: Token name",
 			]);
+
+		DefineAst(outputDir, "Stmt",
+		[
+			"Block		: List<Stmt> statements",
+			"Expression : Expr expression",
+			"Print		: Expr expression",
+			"Var		: Token name, Expr? initializer",
+		]);
 	}
 
 	private static void DefineAst(

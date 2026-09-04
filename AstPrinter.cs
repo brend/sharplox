@@ -6,7 +6,10 @@ class AstPrinter : Expr.Visitor<string>
 {
 	public string Print(Expr expr) => expr.Accept(this);
 
-	public string VisitBinaryExpr(Expr.Binary expr) =>
+    public string VisitAssignExpr(Expr.Assign expr) =>
+		Parenthesize("=" + expr.name.lexeme, expr.value);
+
+    public string VisitBinaryExpr(Expr.Binary expr) =>
 		Parenthesize(expr.oper.lexeme, expr.left, expr.right);
 
     public string VisitGroupingExpr(Expr.Grouping expr) =>
@@ -20,7 +23,10 @@ class AstPrinter : Expr.Visitor<string>
     public string VisitUnaryExpr(Expr.Unary expr) =>
 		Parenthesize(expr.oper.lexeme, expr.right);
 
-	private string Parenthesize(string name, params Expr[] exprs)
+    public string VisitVariableExpr(Expr.Variable expr) =>
+		expr.name.lexeme;
+
+    private string Parenthesize(string name, params Expr[] exprs)
 	{
 		var builder = new StringBuilder();
 

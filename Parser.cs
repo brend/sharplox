@@ -1,5 +1,6 @@
 namespace SharpLox;
 
+using System.Data.Common;
 using static TokenType;
 
 sealed class Parser
@@ -12,19 +13,109 @@ sealed class Parser
         this.tokens = tokens;
     }
 
-    public Expr? Parse()
+    public List<Stmt> Parse()
+    {
+        var statements = new List<Stmt>();
+
+        while (!IsAtEnd())
+        {
+            if (Declaration() is Stmt stmt)
+            {
+                statements.Add(stmt);
+            }
+        }
+
+        return statements;
+    }
+
+    private Stmt? Declaration()
     {
         try
         {
-            return Expression();
+            if (Match(VAR)) return VarDeclaration();
+            return Statement();
         }
         catch (ParseError)
         {
+            Synchronize();
             return null;
         }
     }
 
-    private Expr Expression() => Equality();
+    private Stmt.Var VarDeclaration()
+    {
+        var name = Consume(IDENTIFIER, "Expect variable name.");
+
+        Expr? initializer = null;
+        if (Match(EQUAL))
+        {
+            initializer = Expression();
+        }
+
+        Consume(SEMICOLON, "Expect ';' after variable declaration.");
+        return new Stmt.Var(name, initializer);
+    }
+
+    private Stmt Statement()
+    {
+        if (Match(PRINT)) return PrintStatement();
+        if (Match(LEFT_BRACE)) return new Stmt.Block(Block());
+        return ExpressionStatement();
+    }
+
+    private List<Stmt> Block()
+    {
+        var statements = new List<Stmt>();
+
+        while (!Check(RIGHT_BRACE) && !IsAtEnd())
+        {
+            if (Declaration() is Stmt stmt)
+            {
+                statements.Add(stmt);
+            }
+        }
+
+        Consume(RIGHT_BRACE, "Expect '}' after block.");
+
+        return statements;
+    }
+
+    private Stmt.Print PrintStatement()
+    {
+        var value = Expression();
+        Consume(SEMICOLON, "Expect ';' after value.");
+        return new Stmt.Print(value);
+    }
+
+    private Stmt.Expression ExpressionStatement()
+    {
+        var expr = Expression();
+        Consume(SEMICOLON, "Expect ';' after expression.");
+        return new Stmt.Expression(expr);
+    }
+
+    private Expr Expression() => Assignment();
+
+    private Expr Assignment()
+    {
+        var expr = Equality();
+
+        if (Match(EQUAL))
+        {
+            var equals = Previous();
+            var value = Assignment();
+
+            if (expr is Expr.Variable varExpr)
+            {
+                var name = varExpr.name;
+                return new Expr.Assign(name, value);
+            }
+
+            Error(equals, "Invalid assignment target.");
+        }
+
+        return expr;
+    }
 
     private Expr Equality()
     {
@@ -108,6 +199,11 @@ sealed class Parser
         if (Match(NUMBER, STRING))
         {
             return new Expr.Literal(Previous().literal);
+        }
+
+        if (Match(IDENTIFIER))
+        {
+            return new Expr.Variable(Previous());
         }
 
         if (Match(LEFT_PAREN))

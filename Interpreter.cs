@@ -1,16 +1,20 @@
 namespace SharpLox;
 
-using System.Reflection.Emit;
+using System.Linq.Expressions;
 using static TokenType;
 
-sealed class Interpreter : Expr.Visitor<object?>
+sealed class Interpreter : Expr.Visitor<object?>, Stmt.Visitor<Void>
 {
-    public void Interpret(Expr expression)
+    private Environment environment = new();
+
+    public void Interpret(List<Stmt> statements)
     {
         try
         {
-            var value = Evaluate(expression);
-            Console.WriteLine(Stringify(value));
+            foreach (var statement in statements)
+            {
+                Execute(statement);
+            }
         }
         catch (RuntimeError error)
         {
@@ -18,7 +22,9 @@ sealed class Interpreter : Expr.Visitor<object?>
         }
     }
 
-    private string Stringify(object? value)
+    private void Execute(Stmt stmt) => stmt.Accept(this);
+
+    private static string Stringify(object? value)
     {
         if (value is null) return "nil";
 
@@ -80,6 +86,9 @@ sealed class Interpreter : Expr.Visitor<object?>
         };
     }
 
+    public object? VisitVariableExpr(Expr.Variable expr) =>
+        environment.Get(expr.name);
+
     private object? Evaluate(Expr expr) => expr.Accept(this);
 
     private static bool IsTruthy(object? value) => value switch
@@ -101,5 +110,63 @@ sealed class Interpreter : Expr.Visitor<object?>
     {
         if (value is double d) return d;
         throw new RuntimeError(oper, "Operand must be a number.");
+    }
+
+    public Void VisitExpressionStmt(Stmt.Expression stmt)
+    {
+        Evaluate(stmt.expression);
+        return default;
+    }
+
+    public Void VisitPrintStmt(Stmt.Print stmt)
+    {
+        var value = Evaluate(stmt.expression);
+        Console.WriteLine(Stringify(value));
+        return default;
+    }
+
+    public Void VisitVarStmt(Stmt.Var stmt)
+    {
+        object? value = null;
+
+        if (stmt.initializer is Expr expr)
+        {
+            value = Evaluate(expr);
+        }
+
+        environment.Define(stmt.name.lexeme, value);
+        return default;
+    }
+
+    public object? VisitAssignExpr(Expr.Assign expr)
+    {
+        var value = Evaluate(expr.value);
+        environment.Assign(expr.name, value);
+        return value;
+    }
+
+    public Void VisitBlockStmt(Stmt.Block stmt)
+    {
+        ExecuteBlock(stmt.statements, new Environment(environment));
+        return default;
+    }
+
+    private void ExecuteBlock(List<Stmt> statements, Environment environment)
+    {
+        var previous = this.environment;
+
+        try
+        {
+            this.environment = environment;
+
+            foreach (var stmt in statements)
+            {
+                Execute(stmt);
+            }
+        }
+        finally
+        {
+            this.environment = previous;
+        }
     }
 }
