@@ -1,5 +1,7 @@
 namespace SharpLox;
 
+using System.Globalization;
+
 using static TokenType;
 
 class Scanner
@@ -175,7 +177,7 @@ class Scanner
 			while (IsDigit(Peek())) Advance();
 		}
 
-		AddToken(NUMBER, double.Parse(source[start .. current]));
+		AddToken(NUMBER, double.Parse(source[start .. current], CultureInfo.InvariantCulture));
 	}
 
 	private char PeekNext() =>
