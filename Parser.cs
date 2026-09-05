@@ -33,6 +33,7 @@ sealed class Parser
     {
         try
         {
+            if (Match(FUN)) return Function("function");
             if (Match(VAR)) return VarDeclaration();
             return Statement();
         }
@@ -41,6 +42,31 @@ sealed class Parser
             Synchronize();
             return null;
         }
+    }
+
+    private Stmt.Function Function(string kind)
+    {
+        var name = Consume(IDENTIFIER, $"Expect {kind} name.");
+        Consume(LEFT_PAREN, $"Expect '(' after {kind} name.");
+        var parameters = new List<Token>();
+        if (!Check(RIGHT_PAREN))
+        {
+            do
+            {
+                if (parameters.Count >= 255)
+                {
+                    Error(Peek(), "Can't have more than 255 parameters");
+                }
+
+                parameters.Add(Consume(IDENTIFIER, "Expect parameter name."));
+            } while (Match(COMMA));
+        }
+
+        Consume(RIGHT_PAREN, "Expect ')' after parameters.");
+
+        Consume(LEFT_BRACE, $"Expect '{{' before {kind} body.");
+        var body = Block();
+        return new Stmt.Function(name, parameters, body);
     }
 
     private Stmt.Var VarDeclaration()
@@ -62,9 +88,24 @@ sealed class Parser
         if (Match(FOR)) return ForStatement();
         if (Match(IF)) return IfStatement();
         if (Match(PRINT)) return PrintStatement();
+        if (Match(RETURN)) return ReturnStatement();
         if (Match(WHILE)) return WhileStatement();
         if (Match(LEFT_BRACE)) return new Stmt.Block(Block());
         return ExpressionStatement();
+    }
+
+    private Stmt.Return ReturnStatement()
+    {
+        var keyword = Previous();
+        Expr? value = null;
+        if (!Check(SEMICOLON))
+        {
+            value = Expression();
+        }
+
+        Consume(SEMICOLON, "Expect ';' after return value.");
+
+        return new Stmt.Return(keyword, value);
     }
 
     private Stmt ForStatement()

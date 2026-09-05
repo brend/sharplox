@@ -1,13 +1,23 @@
 namespace SharpLox;
 
 using System.Globalization;
-using System.Linq.Expressions;
-using Microsoft.CSharp.RuntimeBinder;
 using static TokenType;
 
 sealed class Interpreter : Expr.Visitor<object?>, Stmt.Visitor<Void>
 {
-    private Environment environment = new();
+    public readonly Environment Globals = new();
+
+    private Environment environment;
+
+    public Interpreter()
+    {
+        environment = Globals;
+        Globals.Define("clock", new ForeignCallable
+        {
+            Arity = 0,
+            Function = (_, _) => DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() / 1000.0,
+        });
+    }
 
     public void Interpret(List<Stmt> statements)
     {
@@ -158,7 +168,7 @@ sealed class Interpreter : Expr.Visitor<object?>, Stmt.Visitor<Void>
         return default;
     }
 
-    private void ExecuteBlock(List<Stmt> statements, Environment environment)
+    public void ExecuteBlock(List<Stmt> statements, Environment environment)
     {
         var previous = this.environment;
 
@@ -237,5 +247,22 @@ sealed class Interpreter : Expr.Visitor<object?>, Stmt.Visitor<Void>
         }
 
         return function.Call(this, arguments);
+    }
+
+    public Void VisitFunctionStmt(Stmt.Function stmt)
+    {
+        var function = new LoxFunction(stmt, environment);
+        environment.Define(stmt.name.lexeme, function);
+        return default;
+    }
+
+    public Void VisitReturnStmt(Stmt.Return stmt)
+    {
+        object? value = null;
+        if (stmt.value is not null)
+        {
+            value = Evaluate(stmt.value);
+        }
+        throw new Return(value);
     }
 }
