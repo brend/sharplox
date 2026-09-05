@@ -4,7 +4,6 @@ sealed class LoxFunction : LoxCallable
 {
     private readonly Stmt.Function declaration;
     private readonly Environment closure;
-
     public LoxFunction(Stmt.Function declaration, Environment closure)
     {
         this.closure = closure;
