@@ -17,6 +17,7 @@ static class GenerateAst
             [
                 "Assign		: Token name, Expr value",
                 "Binary		: Expr left, Token oper, Expr right",
+				"Call		: Expr callee, Token paren, List<Expr> arguments",
                 "Grouping	: Expr expression",
                 "Literal	: object? value",
                 "Logical	: Expr left, Token oper, Expr right",

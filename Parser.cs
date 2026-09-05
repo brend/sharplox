@@ -307,7 +307,48 @@ sealed class Parser
             return new Expr.Unary(oper, right);
         }
 
-        return Primary();
+        return Call();
+    }
+
+    private Expr Call()
+    {
+        var expr = Primary();
+
+        while (true)
+        {
+            if (Match(LEFT_PAREN))
+            {
+                expr = FinishCall(expr);
+            }
+            else
+            {
+                break;
+            }
+        }
+
+        return expr;
+    }
+
+    private Expr FinishCall(Expr callee)
+    {
+        var arguments = new List<Expr>();
+
+        if (!Check(RIGHT_PAREN))
+        {
+            do
+            {
+                if (arguments.Count >= 255)
+                {
+                    Error(Peek(), "Can't have more than 255 arguments.");
+                }
+
+                arguments.Add(Expression());
+            } while (Match(COMMA));
+        }
+
+        var paren = Consume(RIGHT_PAREN, "Expect ')' after arguments.");
+
+        return new Expr.Call(callee, paren, arguments);
     }
 
     private Expr Primary()

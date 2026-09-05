@@ -2,6 +2,7 @@ namespace SharpLox;
 
 using System.Globalization;
 using System.Linq.Expressions;
+using Microsoft.CSharp.RuntimeBinder;
 using static TokenType;
 
 sealed class Interpreter : Expr.Visitor<object?>, Stmt.Visitor<Void>
@@ -212,5 +213,29 @@ sealed class Interpreter : Expr.Visitor<object?>, Stmt.Visitor<Void>
             Execute(stmt.body);
         }
         return default;
+    }
+
+    public object? VisitCallExpr(Expr.Call expr)
+    {
+        object? callee = Evaluate(expr.callee);
+
+        var arguments = new List<object?>();
+
+        foreach (var argument in expr.arguments)
+        {
+            arguments.Add(Evaluate(argument));
+        }
+
+        if (callee is not LoxCallable function)
+        {
+            throw new RuntimeError(expr.paren, "Can only call functions and methods.");
+        }
+
+        if (arguments.Count != function.Arity)
+        {
+            throw new RuntimeError(expr.paren, $"Expected {function.Arity} arguments but got {arguments.Count}.");
+        }
+
+        return function.Call(this, arguments);
     }
 }
