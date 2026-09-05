@@ -82,7 +82,7 @@ static class Lox
         }
         else
         {
-            Report(token.line, $"at '{token.lexeme}'", message);
+            Report(token.line, $" at '{token.lexeme}'", message);
         }
     }
 

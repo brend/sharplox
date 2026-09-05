@@ -5,6 +5,7 @@ using Xunit;
 
 using static TokenType;
 
+[Collection("Lox console")]
 public class ScannerTests
 {
 	[Fact]

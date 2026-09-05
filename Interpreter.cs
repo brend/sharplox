@@ -1,5 +1,6 @@
 namespace SharpLox;
 
+using System.Globalization;
 using System.Linq.Expressions;
 using static TokenType;
 
@@ -30,14 +31,19 @@ sealed class Interpreter : Expr.Visitor<object?>, Stmt.Visitor<Void>
 
         if (value is double d)
         {
-            var text = d.ToString();
+            var text = d.ToString(CultureInfo.InvariantCulture);
 
             return text.EndsWith(".0")
-                ? text[..-2]
+                ? text[..^2]
                 : text;
         }
 
-        return value!.ToString() ?? "";
+        return value switch
+        {
+            true => "true", // true.ToString() produces "True"
+            false => "false", // false.ToString() produces "False"
+            _ => value.ToString() ?? ""
+        };
     }
 
     public object? VisitBinaryExpr(Expr.Binary expr)
