@@ -33,6 +33,7 @@ sealed class Parser
     {
         try
         {
+            if (Match(CLASS)) return ClassDeclaration();
             if (Match(FUN)) return Function("function");
             if (Match(VAR)) return VarDeclaration();
             return Statement();
@@ -42,6 +43,22 @@ sealed class Parser
             Synchronize();
             return null;
         }
+    }
+
+    private Stmt.Class ClassDeclaration()
+    {
+        var name = Consume(IDENTIFIER, "Expect class name.");
+        Consume(LEFT_BRACE, "Expect '{' before class body.");
+
+        var methods = new List<Stmt.Function>();
+        while (!Check(RIGHT_BRACE) && !IsAtEnd())
+        {
+            methods.Add(Function("method"));
+        }
+
+        Consume(RIGHT_BRACE, "Expect '}' after class body.");
+
+        return new Stmt.Class(name, methods);
     }
 
     private Stmt.Function Function(string kind)

@@ -213,4 +213,11 @@ sealed class Resolver : Expr.Visitor<Void>, Stmt.Visitor<Void>
         EndScope();
         currentFunction = enclosingFunction;
     }
+
+    public Void VisitClassStmt(Stmt.Class stmt)
+    {
+        Declare(stmt.name);
+        Define(stmt.name);
+        return default;
+    }
 }

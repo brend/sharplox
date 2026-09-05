@@ -292,4 +292,12 @@ sealed class Interpreter : Expr.Visitor<object?>, Stmt.Visitor<Void>
     {
         locals[expr] = depth;
     }
+
+    public Void VisitClassStmt(Stmt.Class stmt)
+    {
+        environment.Define(stmt.name.lexeme, null);
+        var klass = new LoxClass(stmt.name.lexeme);
+        environment.Assign(stmt.name, klass);
+        return default;
+    }
 }
