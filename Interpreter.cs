@@ -32,7 +32,7 @@ sealed class Interpreter : Expr.Visitor<object?>, Stmt.Visitor<Void>
         {
             var text = d.ToString();
 
-            return text.EndsWith(".0") 
+            return text.EndsWith(".0")
                 ? text[..-2]
                 : text;
         }
@@ -58,7 +58,7 @@ sealed class Interpreter : Expr.Visitor<object?>, Stmt.Visitor<Void>
                 a + b,
             PLUS when left is string s && right is string t =>
                 s + t,
-            PLUS => 
+            PLUS =>
                 throw new RuntimeError(expr.oper, "Operands must be two numbers or two strings."),
             SLASH => CheckNumberOperand(expr.oper, left) / CheckNumberOperand(expr.oper, right),
             STAR => CheckNumberOperand(expr.oper, left) * CheckNumberOperand(expr.oper, right),
@@ -70,7 +70,7 @@ sealed class Interpreter : Expr.Visitor<object?>, Stmt.Visitor<Void>
     public object? VisitGroupingExpr(Expr.Grouping expr) =>
         Evaluate(expr.expression);
 
-    public object? VisitLiteralExpr(Expr.Literal expr) => 
+    public object? VisitLiteralExpr(Expr.Literal expr) =>
         expr.value;
 
     public object? VisitUnaryExpr(Expr.Unary expr)
@@ -168,5 +168,43 @@ sealed class Interpreter : Expr.Visitor<object?>, Stmt.Visitor<Void>
         {
             this.environment = previous;
         }
+    }
+
+    public Void VisitIfStmt(Stmt.If stmt)
+    {
+        if (IsTruthy(Evaluate(stmt.condition)))
+        {
+            Execute(stmt.thenBranch);
+        }
+        else if (stmt.elseBranch is not null)
+        {
+            Execute(stmt.elseBranch);
+        }
+        return default;
+    }
+
+    public object? VisitLogicalExpr(Expr.Logical expr)
+    {
+        var left = Evaluate(expr.left);
+
+        if (expr.oper.type == OR)
+        {
+            if (IsTruthy(left)) return left;
+        }
+        else
+        {
+            if (!IsTruthy(left)) return left;
+        }
+
+        return Evaluate(expr.right);
+    }
+
+    public Void VisitWhileStmt(Stmt.While stmt)
+    {
+        while (IsTruthy(Evaluate(stmt.condition)))
+        {
+            Execute(stmt.body);
+        }
+        return default;
     }
 }

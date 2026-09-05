@@ -1,10 +1,10 @@
 namespace SharpLox;
 
 record Token(
-		TokenType type,
-		string lexeme,
-		object? literal,
-		int line)
+        TokenType type,
+        string lexeme,
+        object? literal,
+        int line)
 {
-	public override string ToString() => $"{type} {lexeme} {literal}";
+    public override string ToString() => $"{type} {lexeme} {literal}";
 }

@@ -1,6 +1,7 @@
 namespace SharpLox;
 
 using System.Data.Common;
+using System.Reflection.Metadata;
 using static TokenType;
 
 sealed class Parser
@@ -58,9 +59,98 @@ sealed class Parser
 
     private Stmt Statement()
     {
+        if (Match(FOR)) return ForStatement();
+        if (Match(IF)) return IfStatement();
         if (Match(PRINT)) return PrintStatement();
+        if (Match(WHILE)) return WhileStatement();
         if (Match(LEFT_BRACE)) return new Stmt.Block(Block());
         return ExpressionStatement();
+    }
+
+    private Stmt ForStatement()
+    {
+        Consume(LEFT_PAREN, "Expect '(' after 'for'.");
+
+        Stmt? initializer;
+
+        if (Match(SEMICOLON))
+        {
+            initializer = null;
+        }
+        else if (Match(VAR))
+        {
+            initializer = VarDeclaration();
+        }
+        else
+        {
+            initializer = ExpressionStatement();
+        }
+
+        Expr? condition = null;
+        if (!Check(SEMICOLON))
+        {
+            condition = Expression();
+        }
+        Consume(SEMICOLON, "Expect ';' after loop condition.");
+
+        Expr? increment = null;
+        if (!Check(RIGHT_PAREN))
+        {
+            increment = Expression();
+        }
+        Consume(RIGHT_PAREN, "Expect ')' after for clauses.");
+
+        var body = Statement();
+
+        if (increment is not null)
+        {
+            body = new Stmt.Block(
+                [
+                    body,
+                    new Stmt.Expression(increment),
+                ]);
+        }
+
+        condition ??= new Expr.Literal(true);
+        body = new Stmt.While(condition, body);
+
+        if (initializer is not null)
+        {
+            body = new Stmt.Block(
+                [
+                    initializer,
+                    body,
+                ]);
+        }
+
+        return body;
+    }
+
+    private Stmt.While WhileStatement()
+    {
+        Consume(LEFT_PAREN, "Expect '(' after 'while'.");
+        var condition = Expression();
+        Consume(RIGHT_PAREN, "Expect ')' after condition.");
+        var body = Statement();
+
+        return new Stmt.While(condition, body);
+    }
+
+    private Stmt.If IfStatement()
+    {
+        Consume(LEFT_PAREN, "Expect '(' after 'if'.");
+        var condition = Expression();
+        Consume(RIGHT_PAREN, "Expect ')' after if condition.");
+
+        var thenBranch = Statement();
+        Stmt? elseBranch = null;
+
+        if (Match(ELSE))
+        {
+            elseBranch = Statement();
+        }
+
+        return new Stmt.If(condition, thenBranch, elseBranch);
     }
 
     private List<Stmt> Block()
@@ -98,7 +188,7 @@ sealed class Parser
 
     private Expr Assignment()
     {
-        var expr = Equality();
+        var expr = Or();
 
         if (Match(EQUAL))
         {
@@ -112,6 +202,36 @@ sealed class Parser
             }
 
             Error(equals, "Invalid assignment target.");
+        }
+
+        return expr;
+    }
+
+    private Expr Or()
+    {
+        var expr = And();
+
+        while (Match(OR))
+        {
+            var oper = Previous();
+            var right = And();
+
+            expr = new Expr.Logical(expr, oper, right);
+        }
+
+        return expr;
+    }
+
+    private Expr And()
+    {
+        var expr = Equality();
+
+        while (Match(AND))
+        {
+            var oper = Previous();
+            var right = Equality();
+
+            expr = new Expr.Logical(expr, oper, right);
         }
 
         return expr;
@@ -210,7 +330,7 @@ sealed class Parser
         {
             Expr expr = Expression();
             Consume(RIGHT_PAREN, "Expect ')' after expression.");
-            
+
             return new Expr.Grouping(expr);
         }
 
@@ -257,7 +377,7 @@ sealed class Parser
                 case CLASS or FUN or VAR or
                     FOR or IF or WHILE or
                     PRINT or RETURN:
-                return;
+                    return;
             }
 
             Advance();

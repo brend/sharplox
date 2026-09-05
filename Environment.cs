@@ -10,7 +10,7 @@ sealed class Environment
         this.enclosing = enclosing;
     }
 
-    public void Define(string name, object? value) => 
+    public void Define(string name, object? value) =>
         values[name] = value;
 
     public object? Get(Token name)
@@ -24,7 +24,7 @@ sealed class Environment
         {
             return enclosing.Get(name);
         }
-        
+
         throw new RuntimeError(name, $"Undefined variable '{name.lexeme}'.");
     }
 
