@@ -42,6 +42,8 @@ internal sealed class LoxTestSession : IDisposable
     {
         var statements = Parse(source);
         Assert.False(HadError, Errors);
+        new Resolver(interpreter).Resolve(statements);
+        if (HadError) return;
         interpreter.Interpret(statements);
     }
 

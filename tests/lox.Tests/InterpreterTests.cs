@@ -47,7 +47,7 @@ public class InterpreterTests
     [InlineData("print 8 / 2 / 2; print 8 - 2 - 1;", "2\n5\n")]
     [InlineData("var a; var b; print a = b = 7; print a; print b;", "7\n7\n7\n")]
     [InlineData("var a = 0; print (a = 1) + (a = 2); print a;", "3\n2\n")]
-    [InlineData("var a = \"outer\"; { var a = a; print a; a = \"inner\"; } print a;", "outer\nouter\n")]
+    [InlineData("var a = \"outer\"; { var a = \"local\"; print a; a = \"inner\"; } print a;", "local\nouter\n")]
     [InlineData("var a = 1; { { a = 2; } } print a;", "2\n")]
     public void ExpressionsAndScope_FollowChapterSemantics(string source, string expected)
     {

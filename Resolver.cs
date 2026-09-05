@@ -187,13 +187,15 @@ sealed class Resolver : Expr.Visitor<Void>, Stmt.Visitor<Void>
 
     private void ResolveLocal(Expr expr, Token name)
     {
-        for (int i = scopes.Count - 1; i >= 0; i--)
+        int i = 0;
+        foreach (var scope in scopes)
         {
-            if (scopes.ElementAt(i).ContainsKey(name.lexeme))
+            if (scope.ContainsKey(name.lexeme))
             {
-                interpreter.Resolve(expr, scopes.Count - 1 - i);
+                interpreter.Resolve(expr, i);
                 return;
             }
+            i++;
         }
     }
 
