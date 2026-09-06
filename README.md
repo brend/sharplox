@@ -1,5 +1,7 @@
 # SharpLox
 
+A C# implementation of the Lox interpreter as described in [Crafting Interpreters](https://craftinginterpreters.com) by Robert Nystrom.
+
 ## Building and Running
 
 To build the interpreter, run
