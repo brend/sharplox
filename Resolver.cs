@@ -249,6 +249,12 @@ sealed class Resolver : Expr.Visitor<Void>, Stmt.Visitor<Void>
             Resolve(stmt.superclass);
         }
 
+        if (stmt.superclass is not null)
+        {
+            BeginScope();
+            scopes.Peek()["super"] = true;
+        }
+
         BeginScope();
         scopes.Peek()["this"] = true;
 
@@ -263,6 +269,11 @@ sealed class Resolver : Expr.Visitor<Void>, Stmt.Visitor<Void>
         }
 
         EndScope();
+
+        if (stmt.superclass is not null)
+        {
+            EndScope();
+        }
 
         currentClass = enclosingClass;
 
@@ -290,6 +301,12 @@ sealed class Resolver : Expr.Visitor<Void>, Stmt.Visitor<Void>
             return default;
         }
 
+        ResolveLocal(expr, expr.keyword);
+        return default;
+    }
+
+    public Void VisitSuperExpr(Expr.Super expr)
+    {
         ResolveLocal(expr, expr.keyword);
         return default;
     }

@@ -12,6 +12,7 @@ abstract class Expr
     R VisitLiteralExpr(Literal expr);
     R VisitLogicalExpr(Logical expr);
     R VisitSetExpr(Set expr);
+    R VisitSuperExpr(Super expr);
     R VisitThisExpr(This expr);
     R VisitUnaryExpr(Unary expr);
     R VisitVariableExpr(Variable expr);
@@ -147,6 +148,22 @@ abstract class Expr
     public readonly Expr obj;
     public readonly Token name;
     public readonly Expr value;
+  }
+  public class Super : Expr
+  {
+    public Super(Token keyword, Token method)
+    {
+      this.keyword = keyword;
+      this.method = method;
+    }
+
+    public override R Accept<R>(Visitor<R> visitor)
+    {
+      return visitor.VisitSuperExpr(this);
+    }
+
+    public readonly Token keyword;
+    public readonly Token method;
   }
   public class This : Expr
   {

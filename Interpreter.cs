@@ -307,6 +307,12 @@ sealed class Interpreter : Expr.Visitor<object?>, Stmt.Visitor<Void>
 
         environment.Define(stmt.name.lexeme, null);
 
+        if (stmt.superclass is not null)
+        {
+            environment = new Environment(environment);
+            environment.Define("super", superclass);
+        }
+
         var methods = new Dictionary<string, LoxFunction>();
         foreach (var method in stmt.methods)
         {
@@ -316,7 +322,14 @@ sealed class Interpreter : Expr.Visitor<object?>, Stmt.Visitor<Void>
         }
 
         var klass = new LoxClass(stmt.name.lexeme, (LoxClass?)superclass, methods);
+
+        if (superclass is not null)
+        {
+            environment = environment.Enclosing!;
+        }
+
         environment.Assign(stmt.name, klass);
+        
         return default;
     }
 
@@ -346,4 +359,18 @@ sealed class Interpreter : Expr.Visitor<object?>, Stmt.Visitor<Void>
 
     public object? VisitThisExpr(Expr.This expr) =>
         LookUpVariable(expr.keyword, expr);
+
+    public object? VisitSuperExpr(Expr.Super expr)
+    {
+        var distance = locals[expr];
+        var superclass = (LoxClass)environment.GetAt(distance, "super")!;
+        var obj = (LoxInstance)environment.GetAt(distance - 1, "this")!;
+
+        if (superclass.FindMethod(expr.method.lexeme) is LoxFunction method)
+        {
+            return method.Bind(obj);
+        }
+
+        throw new RuntimeError(expr.method, $"Undefined property '{expr.method.lexeme}'.");
+    }
 }

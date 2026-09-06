@@ -32,6 +32,8 @@ class AstPrinter : Expr.Visitor<string>
     public string VisitSetExpr(Expr.Set expr) =>
         Parenthesize("set", expr.obj, expr.value);
 
+    public string VisitSuperExpr(Expr.Super expr) => expr.keyword.lexeme;
+
     public string VisitThisExpr(Expr.This expr) => expr.keyword.lexeme;
 
     public string VisitUnaryExpr(Expr.Unary expr) =>

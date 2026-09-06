@@ -434,6 +434,14 @@ sealed class Parser
 
         if (Match(NUMBER, STRING)) return new Expr.Literal(Previous().literal);
 
+        if (Match(SUPER))
+        {
+            var keyword = Previous();
+            Consume(DOT, "Expect '.' after 'super'.");
+            var method = Consume(IDENTIFIER, "Expect superclass method name.");
+            return new Expr.Super(keyword, method);
+        }
+
         if (Match(THIS)) return new Expr.This(Previous());
 
         if (Match(IDENTIFIER)) return new Expr.Variable(Previous());

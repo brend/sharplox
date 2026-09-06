@@ -2,18 +2,13 @@ class Doughnut {
   cook() {
     print "Fry until golden brown.";
   }
-
-  eat() {
-    print "Could use some filling.";
-  }
 }
 
 class BostonCream < Doughnut {
-  eat() {
-    print "Just perfect.";
+  cook() {
+    super.cook();
+    print "Pipe full of custard and coat with chocolate.";
   }
 }
 
-var bc = BostonCream();
-bc.cook();
-bc.eat();
+BostonCream().cook();
