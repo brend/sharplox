@@ -8,9 +8,16 @@ sealed class LoxClass : LoxCallable
 
     public int Arity => FindMethod("init")?.Arity ?? 0;
 
-    public LoxClass(string name, Dictionary<string, LoxFunction> methods)
+    public LoxClass? Superclass { get; }
+
+    public LoxClass(
+        string name,
+        LoxClass? superclass,
+        Dictionary<string, LoxFunction> methods
+        )
     {
         Name = name;
+        Superclass = superclass;
         Methods = methods;
     }
 
@@ -27,8 +34,18 @@ sealed class LoxClass : LoxCallable
         return instance;
     }
 
-    public LoxFunction? FindMethod(string name) =>
-        Methods.TryGetValue(name, out var method)
-            ? method
-            : null;
+    public LoxFunction? FindMethod(string name)
+    {
+        if (Methods.TryGetValue(name, out var method))
+        {
+            return method;
+        }
+
+        if (Superclass is not null)
+        {
+            return Superclass.FindMethod(name);
+        }
+
+        return null;
+    }
 }

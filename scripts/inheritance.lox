@@ -1,0 +1,19 @@
+class Doughnut {
+  cook() {
+    print "Fry until golden brown.";
+  }
+
+  eat() {
+    print "Could use some filling.";
+  }
+}
+
+class BostonCream < Doughnut {
+  eat() {
+    print "Just perfect.";
+  }
+}
+
+var bc = BostonCream();
+bc.cook();
+bc.eat();

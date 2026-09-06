@@ -236,6 +236,19 @@ sealed class Resolver : Expr.Visitor<Void>, Stmt.Visitor<Void>
         Declare(stmt.name);
         Define(stmt.name);
 
+        if (
+            stmt.superclass is not null &&
+            stmt.name.lexeme.Equals(stmt.superclass.name.lexeme)
+            )
+        {
+            Lox.Error(stmt.superclass.name, "A class can't inherit from itself.");
+        }
+
+        if (stmt.superclass is not null)
+        {
+            Resolve(stmt.superclass);
+        }
+
         BeginScope();
         scopes.Peek()["this"] = true;
 

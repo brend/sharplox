@@ -295,6 +295,16 @@ sealed class Interpreter : Expr.Visitor<object?>, Stmt.Visitor<Void>
 
     public Void VisitClassStmt(Stmt.Class stmt)
     {
+        object? superclass = null;
+        if (stmt.superclass is not null)
+        {
+            superclass = Evaluate(stmt.superclass);
+            if (superclass is not LoxClass)
+            {
+                throw new RuntimeError(stmt.superclass.name, "Superclass must be a class.");
+            }
+        }
+
         environment.Define(stmt.name.lexeme, null);
 
         var methods = new Dictionary<string, LoxFunction>();
@@ -305,7 +315,7 @@ sealed class Interpreter : Expr.Visitor<object?>, Stmt.Visitor<Void>
             methods[method.name.lexeme] = function;
         }
 
-        var klass = new LoxClass(stmt.name.lexeme, methods);
+        var klass = new LoxClass(stmt.name.lexeme, (LoxClass?)superclass, methods);
         environment.Assign(stmt.name, klass);
         return default;
     }

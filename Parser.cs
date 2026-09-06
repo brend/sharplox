@@ -48,6 +48,14 @@ sealed class Parser
     private Stmt.Class ClassDeclaration()
     {
         var name = Consume(IDENTIFIER, "Expect class name.");
+
+        Expr.Variable? superclass = null;
+        if (Match(LESS))
+        {
+            Consume(IDENTIFIER, "Expect superclass name.");
+            superclass = new Expr.Variable(Previous());
+        }
+
         Consume(LEFT_BRACE, "Expect '{' before class body.");
 
         var methods = new List<Stmt.Function>();
@@ -58,7 +66,7 @@ sealed class Parser
 
         Consume(RIGHT_BRACE, "Expect '}' after class body.");
 
-        return new Stmt.Class(name, methods);
+        return new Stmt.Class(name, superclass, methods);
     }
 
     private Stmt.Function Function(string kind)
