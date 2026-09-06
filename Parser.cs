@@ -378,6 +378,11 @@ sealed class Parser
             {
                 expr = FinishCall(expr);
             }
+            else if (Match(DOT))
+            {
+                var name = Consume(IDENTIFIER, "Expect property name after '.'.");
+                expr = new Expr.Get(expr, name);
+            }
             else
             {
                 break;

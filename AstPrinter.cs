@@ -15,6 +15,9 @@ class AstPrinter : Expr.Visitor<string>
     public string VisitCallExpr(Expr.Call expr) =>
         Parenthesize(expr.callee.ToString() ?? "fn", expr.arguments.ToArray());
 
+    public string VisitGetExpr(Expr.Get expr) =>
+        Parenthesize(expr.name.lexeme, expr.obj);
+
     public string VisitGroupingExpr(Expr.Grouping expr) =>
         Parenthesize("group", expr.expression);
 
@@ -25,6 +28,9 @@ class AstPrinter : Expr.Visitor<string>
 
     public string VisitLogicalExpr(Expr.Logical expr) =>
         Parenthesize(expr.oper.lexeme, expr.left, expr.right);
+
+    public string VisitSetExpr(Expr.Set expr) =>
+        Parenthesize("set", expr.obj, expr.value);
 
     public string VisitUnaryExpr(Expr.Unary expr) =>
         Parenthesize(expr.oper.lexeme, expr.right);

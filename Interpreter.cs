@@ -300,4 +300,28 @@ sealed class Interpreter : Expr.Visitor<object?>, Stmt.Visitor<Void>
         environment.Assign(stmt.name, klass);
         return default;
     }
+
+    public object? VisitGetExpr(Expr.Get expr)
+    {
+        var obj = Evaluate(expr.obj);
+        if (obj is LoxInstance instance)
+        {
+            return instance.Get(expr.name);
+        }
+        throw new RuntimeError(expr.name, "Only instances have properties.");
+    }
+
+    public object? VisitSetExpr(Expr.Set expr)
+    {
+        var obj = Evaluate(expr.obj);
+
+        if (obj is not LoxInstance instance)
+        {
+            throw new RuntimeError(expr.name, "Only instances have fields.");
+        }
+
+        var value = Evaluate(expr.value);
+        instance.Set(expr.name, value);
+        return value;
+    }
 }

@@ -220,4 +220,17 @@ sealed class Resolver : Expr.Visitor<Void>, Stmt.Visitor<Void>
         Define(stmt.name);
         return default;
     }
+
+    public Void VisitGetExpr(Expr.Get expr)
+    {
+        Resolve(expr.obj);
+        return default;
+    }
+
+    public Void VisitSetExpr(Expr.Set expr)
+    {
+        Resolve(expr.value);
+        Resolve(expr.obj);
+        return default;
+    }
 }
