@@ -21,6 +21,12 @@ public class ParserTests
     [InlineData("if (true)")]
     [InlineData("while (true)")]
     [InlineData("for (;;")]
+    [InlineData("class")]
+    [InlineData("class Box {")]
+    [InlineData("class Box { method(")]
+    [InlineData("class Box { method() {")]
+    [InlineData("print object.")]
+    [InlineData("object.field =")]
     public void TruncatedInput_ReportsErrorWithoutHostException(string source)
     {
         using var session = new LoxTestSession();
@@ -44,6 +50,9 @@ public class ParserTests
     [InlineData("print \"must not run\"; var a = ;")]
     [InlineData("print \"must not run\"; (a) = 1;")]
     [InlineData("print \"must not run\"; if (true) var a = 1;")]
+    [InlineData("print \"must not run\"; class Box { fun method() {} }")]
+    [InlineData("print \"must not run\"; class Box { var field; }")]
+    [InlineData("print \"must not run\"; this = 1;")]
     public void Application_DoesNotExecuteAnyStatementsAfterSyntaxError(string source)
     {
         using var session = new LoxTestSession();
