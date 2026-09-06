@@ -1,0 +1,18 @@
+
+class Vector {
+    init(x, y) {
+        this.x = x;
+        this.y = y;
+    }
+
+    add(other) {
+        return Vector(this.x + other.x, this.y + other.y);
+    }
+}
+
+var u = Vector(17, 3);
+var v = Vector(4, 2);
+var q = u.add(v);
+print q.x;
+print q.y;
+

@@ -6,11 +6,20 @@ sealed class Resolver : Expr.Visitor<Void>, Stmt.Visitor<Void>
     {
         NONE,
         FUNCTION,
+        INITIALIZER,
+        METHOD,
+    }
+
+    private enum ClassType
+    {
+        NONE,
+        CLASS,
     }
 
     private readonly Interpreter interpreter;
     private readonly Stack<Dictionary<string, bool>> scopes = [];
     private FunctionType currentFunction = FunctionType.NONE;
+    private ClassType currentClass = ClassType.NONE;
 
     public Resolver(Interpreter interpreter)
     {
@@ -61,6 +70,11 @@ sealed class Resolver : Expr.Visitor<Void>, Stmt.Visitor<Void>
         }
         if (stmt.value is not null)
         {
+            if (currentFunction == FunctionType.INITIALIZER)
+            {
+                Lox.Error(stmt.keyword, "Can't return a value from an initializer.");
+            }
+
             Resolve(stmt.value);
         }
         return default;
@@ -216,8 +230,29 @@ sealed class Resolver : Expr.Visitor<Void>, Stmt.Visitor<Void>
 
     public Void VisitClassStmt(Stmt.Class stmt)
     {
+        var enclosingClass = currentClass;
+        currentClass = ClassType.CLASS;
+
         Declare(stmt.name);
         Define(stmt.name);
+
+        BeginScope();
+        scopes.Peek()["this"] = true;
+
+        foreach (var method in stmt.methods)
+        {
+            var declaration =
+                method.name.lexeme.Equals("init")
+                    ? FunctionType.INITIALIZER
+                    : FunctionType.METHOD;
+            
+            ResolveFunction(method, declaration);
+        }
+
+        EndScope();
+
+        currentClass = enclosingClass;
+
         return default;
     }
 
@@ -231,6 +266,18 @@ sealed class Resolver : Expr.Visitor<Void>, Stmt.Visitor<Void>
     {
         Resolve(expr.value);
         Resolve(expr.obj);
+        return default;
+    }
+
+    public Void VisitThisExpr(Expr.This expr)
+    {
+        if (currentClass == ClassType.NONE)
+        {
+            Lox.Error(expr.keyword, "Can't use 'this' outside of a class.");
+            return default;
+        }
+
+        ResolveLocal(expr, expr.keyword);
         return default;
     }
 }

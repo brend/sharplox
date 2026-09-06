@@ -19,6 +19,11 @@ sealed class LoxInstance
             return value;
         }
 
+        if (klass.FindMethod(name.lexeme) is LoxFunction method)
+        {
+            return method.Bind(this);
+        }
+
         throw new RuntimeError(name, $"Undefined property '{name.lexeme}'.");
     }
 

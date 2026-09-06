@@ -23,6 +23,7 @@ static class GenerateAst
                 "Literal	: object? value",
                 "Logical	: Expr left, Token oper, Expr right",
                 "Set        : Expr obj, Token name, Expr value",
+                "This       : Token keyword",
                 "Unary		: Token oper, Expr right",
                 "Variable	: Token name",
             ]);

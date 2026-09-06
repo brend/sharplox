@@ -273,7 +273,7 @@ sealed class Interpreter : Expr.Visitor<object?>, Stmt.Visitor<Void>
 
     public Void VisitFunctionStmt(Stmt.Function stmt)
     {
-        var function = new LoxFunction(stmt, environment);
+        var function = new LoxFunction(stmt, environment, false);
         environment.Define(stmt.name.lexeme, function);
         return default;
     }
@@ -296,7 +296,16 @@ sealed class Interpreter : Expr.Visitor<object?>, Stmt.Visitor<Void>
     public Void VisitClassStmt(Stmt.Class stmt)
     {
         environment.Define(stmt.name.lexeme, null);
-        var klass = new LoxClass(stmt.name.lexeme);
+
+        var methods = new Dictionary<string, LoxFunction>();
+        foreach (var method in stmt.methods)
+        {
+            var isInitializer = method.name.lexeme.Equals("init");
+            var function = new LoxFunction(method, environment, isInitializer);
+            methods[method.name.lexeme] = function;
+        }
+
+        var klass = new LoxClass(stmt.name.lexeme, methods);
         environment.Assign(stmt.name, klass);
         return default;
     }
@@ -324,4 +333,7 @@ sealed class Interpreter : Expr.Visitor<object?>, Stmt.Visitor<Void>
         instance.Set(expr.name, value);
         return value;
     }
+
+    public object? VisitThisExpr(Expr.This expr) =>
+        LookUpVariable(expr.keyword, expr);
 }
