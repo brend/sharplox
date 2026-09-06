@@ -14,6 +14,7 @@ sealed class Resolver : Expr.Visitor<Void>, Stmt.Visitor<Void>
     {
         NONE,
         CLASS,
+        SUBCLASS,
     }
 
     private readonly Interpreter interpreter;
@@ -246,6 +247,7 @@ sealed class Resolver : Expr.Visitor<Void>, Stmt.Visitor<Void>
 
         if (stmt.superclass is not null)
         {
+            currentClass = ClassType.SUBCLASS;
             Resolve(stmt.superclass);
         }
 
@@ -307,6 +309,15 @@ sealed class Resolver : Expr.Visitor<Void>, Stmt.Visitor<Void>
 
     public Void VisitSuperExpr(Expr.Super expr)
     {
+        if (currentClass == ClassType.NONE)
+        {
+            Lox.Error(expr.keyword, "Can't use 'super' outside of a class.");
+        }
+        else if (currentClass != ClassType.SUBCLASS)
+        {
+            Lox.Error(expr.keyword, "Can't use 'super' in a class with no superclass.");
+        }
+
         ResolveLocal(expr, expr.keyword);
         return default;
     }
